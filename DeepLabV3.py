@@ -33,7 +33,7 @@ from IPython.display import clear_output
 # train_df.head()
 from UpdatedMeanIoU import UpdatedMeanIoU
 
-batch_size = 4
+batch_size = 2
 
 resolution = 128
 desired_depth    = 128
@@ -172,13 +172,13 @@ class DataGenerator(keras.utils.Sequence):
                     voxel = self.resize_voxel(voxel, desired_width)
                     # self.plot3d(voxel)
                     voxel = np.stack([xx for xx in voxel])
-                    # voxel = np.stack([scaler.fit_transform(xx) for xx in voxel])
+                    voxel = np.stack([scaler.fit_transform(xx) for xx in voxel])
 
                     self.images = voxel
 
                     self.X_seq[:, :, :] = self.images
 
-    def resize_voxel(self, voxel,sz=64):
+    def resize_voxel(self, voxel, sz=128):
         output = np.zeros((sz, sz, sz), dtype=np.uint8)
 
         if np.argmax(voxel.shape) == 0:
@@ -294,32 +294,33 @@ def CustomNet(width=128, height=128, depth=128):
     conv4 = layers.Conv3D(128, 3, padding='same', name='conv4_bloco4')(pool3)
     conv4 = layers.BatchNormalization()(conv4)
     conv4 = layers.Activation("relu")(conv4)
-    pool4 = layers.MaxPool3D(padding="valid", data_format='channels_last', name='maxpool4_bloco4')(conv4)
+    # pool4 = layers.MaxPool3D(padding="valid", data_format='channels_last', name='maxpool4_bloco4')(conv4)
 
-    conv5 = layers.Conv3D(256, 3, padding='same', name='conv5_bloco5')(pool4)
+    conv5 = layers.Conv3D(256, 3, padding='same', name='conv5_bloco5')(conv4)
     conv5 = layers.BatchNormalization()(conv5)
     conv5 = layers.Activation("relu")(conv5)
-    pool5 = layers.MaxPool3D(padding="valid", data_format='channels_last', name='maxpool5_bloco5')(conv5)
+    # pool5 = layers.MaxPool3D(padding="valid", data_format='channels_last', name='maxpool5_bloco5')(conv5)
 
     # up sample
-    dconv_1 = layers.Conv3DTranspose(256, 3, padding='same', activation='relu')(pool5)
+    dconv_1 = layers.Conv3DTranspose(256, 3, padding='same', activation='relu')(conv5)
     up_1 = layers.UpSampling3D(2)(dconv_1)
 
+
     # up sample
-    dconv0 = layers.Conv3DTranspose(128, 3, padding='same', activation='relu')(up_1)
+    dconv0 = layers.Conv3DTranspose(256, 3, padding='same', activation='relu')(up_1)
     up0 = layers.UpSampling3D(2)(dconv0)
 
-    dconv1 = layers.Conv3DTranspose(64, 3, padding='same', activation='relu')(up0)
-    up1 = layers.UpSampling3D(2)(dconv1)  # 16x16 -> 32x32
+    dconv1 = layers.Conv3DTranspose(128, 3, padding='same', activation='relu')(up0)
+    # up1 = layers.UpSampling3D(2)(dconv1)  # 16x16 -> 32x32
 
-    dconv2 = layers.Conv3DTranspose(32, 3, padding='same', activation='relu')(up1)
-    up2 = layers.UpSampling3D(2)(dconv2)  # 32x32 -> 64x64
+    dconv2 = layers.Conv3DTranspose(128, 3, padding='same', activation='relu')(dconv1)
+    # up2 = layers.UpSampling3D(2)(dconv2)  # 32x32 -> 64x64
 
     # up2 = layers.add([up2, conv2])
     # aqui, gerar algo de 64 , concatenar com up2 e passar para a dconv3
 
 
-    dconv3 = layers.Conv3DTranspose(16, 3, padding='same', activation='relu', name='conv3d_up_64')(up2)
+    dconv3 = layers.Conv3DTranspose(64, 3, padding='same', activation='relu', name='conv3d_up_64')(dconv2)
     # dconv3 = layers.UpSampling3D(2)(dconv3)  # 32x32 -> 64x64
 
     # dconv4 = layers.Conv3DTranspose(cluster, 3, strides=2, padding='same', activation='softmax')(dconv3)
