@@ -29,7 +29,7 @@ NUM_VAL_IMAGES = 20
 train_images = sorted(glob(os.path.join(DATA_DIR, "melanoma\*")))[:NUM_TRAIN_IMAGES]
 
 
-val_images = sorted(glob(os.path.join(DATA_DIR, "melanoma\*")))[ NUM_TRAIN_IMAGES : NUM_VAL_IMAGES + NUM_TRAIN_IMAGES]
+val_images = sorted(glob(os.path.join(DATA_DIR, "melanoma\*")))[NUM_TRAIN_IMAGES : NUM_VAL_IMAGES + NUM_TRAIN_IMAGES]
 
 
 
@@ -108,8 +108,8 @@ train_np = np.stack(list(train_dataset))
 
 
 
-sample_image = train_np[0,0,2,:,:,:]
-sample_mask = train_np[0,0,2,:,:,:]
+sample_image = train_np[0,0,1,:,:,:]
+sample_mask = train_np[0,0,1,:,:,:]
 
 
 def display(display_list):
